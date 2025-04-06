@@ -30,6 +30,8 @@
   <script>
     let game;
     let ball;
+    let savedVelocity = { x: 0, y: 0 };
+    let ballSpawned = false;
     let isRunning = false;
 
     const config = {
@@ -63,24 +65,43 @@
     }
 
     function update() {
-      if (isRunning && ball && ball.body.velocity.length() === 0) {
-        // Set initial velocity only once when starting
-        const velocityX = Phaser.Math.Between(150, 250) * Phaser.Math.RND.sign();
-        const velocityY = Phaser.Math.Between(150, 250) * Phaser.Math.RND.sign();
-        ball.setVelocity(velocityX, velocityY);
-      } else if (!isRunning && ball) {
+      if (isRunning && ballSpawned && ball) {
+        // nothing needs to be done here—Phaser handles bounce naturally
+      } else if (!isRunning && ball && ballSpawned) {
         ball.setVelocity(0, 0);
       }
     }
 
     document.getElementById("startButton").addEventListener("click", () => {
-      if (!game) game = new Phaser.Game(config);
-      isRunning = true;
-      if (ball) ball.setVisible(true);
+      if (!game) {
+        game = new Phaser.Game(config);
+        return; // wait until Phaser initializes
+      }
+
+      if (!ballSpawned && ball) {
+        // First time: spawn and launch
+        const velocityX = Phaser.Math.Between(150, 250) * Phaser.Math.RND.sign();
+        const velocityY = Phaser.Math.Between(150, 250) * Phaser.Math.RND.sign();
+        savedVelocity = { x: velocityX, y: velocityY };
+
+        ball.setVisible(true);
+        ball.setVelocity(savedVelocity.x, savedVelocity.y);
+        ballSpawned = true;
+        isRunning = true;
+      } else if (!isRunning && ballSpawned) {
+        // Resume movement
+        ball.setVelocity(savedVelocity.x, savedVelocity.y);
+        isRunning = true;
+      }
     });
 
     document.getElementById("stopButton").addEventListener("click", () => {
-      isRunning = false;
+      if (isRunning && ballSpawned && ball) {
+        // Save velocity and pause
+        savedVelocity = { x: ball.body.velocity.x, y: ball.body.velocity.y };
+        ball.setVelocity(0, 0);
+        isRunning = false;
+      }
     });
   </script>
 </body>
