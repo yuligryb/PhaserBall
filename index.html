@@ -33,6 +33,7 @@
     let savedVelocity = { x: 0, y: 0 };
     let ballSpawned = false;
     let isRunning = false;
+    let sceneRef;
 
     const config = {
       type: Phaser.AUTO,
@@ -58,16 +59,16 @@
     }
 
     function create() {
-      ball = this.physics.add.image(config.width / 2, config.height / 2, "ball");
-      ball.setCollideWorldBounds(true);
-      ball.setBounce(1);
-      ball.setVisible(false);
+      sceneRef = this; // so we can access scene functions later
     }
 
     function update() {
-      if (isRunning && ballSpawned && ball) {
-        // nothing needs to be done here—Phaser handles bounce naturally
-      } else if (!isRunning && ball && ballSpawned) {
+      if (!ballSpawned || !ball) return;
+
+      if (isRunning) {
+        // game is running normally
+      } else {
+        // paused
         ball.setVelocity(0, 0);
       }
     }
@@ -75,29 +76,30 @@
     document.getElementById("startButton").addEventListener("click", () => {
       if (!game) {
         game = new Phaser.Game(config);
-        return; // wait until Phaser initializes
+        return; // wait for scene to load
       }
 
-      if (!ballSpawned && ball) {
-        // First time: spawn and launch
+      if (!ballSpawned && sceneRef) {
+        ball = sceneRef.physics.add.image(config.width / 2, config.height / 2, "ball");
+        ball.setCollideWorldBounds(true);
+        ball.setBounce(1);
+        ball.setVisible(true);
+
         const velocityX = Phaser.Math.Between(150, 250) * Phaser.Math.RND.sign();
         const velocityY = Phaser.Math.Between(150, 250) * Phaser.Math.RND.sign();
         savedVelocity = { x: velocityX, y: velocityY };
-
-        ball.setVisible(true);
         ball.setVelocity(savedVelocity.x, savedVelocity.y);
+
         ballSpawned = true;
         isRunning = true;
-      } else if (!isRunning && ballSpawned) {
-        // Resume movement
+      } else if (!isRunning && ball) {
         ball.setVelocity(savedVelocity.x, savedVelocity.y);
         isRunning = true;
       }
     });
 
     document.getElementById("stopButton").addEventListener("click", () => {
-      if (isRunning && ballSpawned && ball) {
-        // Save velocity and pause
+      if (isRunning && ball) {
         savedVelocity = { x: ball.body.velocity.x, y: ball.body.velocity.y };
         ball.setVelocity(0, 0);
         isRunning = false;
