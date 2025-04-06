@@ -29,11 +29,11 @@
 
   <script>
     let game;
+    let sceneRef;
     let ball;
     let savedVelocity = { x: 0, y: 0 };
     let ballSpawned = false;
     let isRunning = false;
-    let sceneRef;
 
     const config = {
       type: Phaser.AUTO,
@@ -59,27 +59,26 @@
     }
 
     function create() {
-      sceneRef = this; // so we can access scene functions later
+      sceneRef = this;
     }
 
     function update() {
       if (!ballSpawned || !ball) return;
 
-      if (isRunning) {
-        // game is running normally
-      } else {
-        // paused
+      if (!isRunning) {
         ball.setVelocity(0, 0);
       }
     }
 
-    document.getElementById("startButton").addEventListener("click", () => {
-      if (!game) {
-        game = new Phaser.Game(config);
-        return; // wait for scene to load
-      }
+    // Create Phaser game immediately
+    window.onload = () => {
+      game = new Phaser.Game(config);
+    };
 
-      if (!ballSpawned && sceneRef) {
+    document.getElementById("startButton").addEventListener("click", () => {
+      if (!sceneRef) return;
+
+      if (!ballSpawned) {
         ball = sceneRef.physics.add.image(config.width / 2, config.height / 2, "ball");
         ball.setCollideWorldBounds(true);
         ball.setBounce(1);
