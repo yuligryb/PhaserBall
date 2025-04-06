@@ -1,82 +1,86 @@
-
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-	<title> Bouncing Ball Animation </title>
-	</head>
-	
-	<body>
-		<canvas id="animationCanvas"> </canvas>
-		<button type="button" id="startButton">Start</button>
-		<!-- add button for the stop event -->
-	</body>
-<script> 
-// Get the canvas and button elements
-const canvas = document.getElementById("animationCanvas");
-const ctx = canvas.getContext("2d");
-const startButton = document.getElementById("startButton");
-//define a stop button and save that to add to your click event handler
-
-// Initialize the canvas size to full screen
-canvas.width = innerWidth -50;
-canvas.height = innerHeight -50;
-
-// Ball properties
-const ball = {
-    x: canvas.width / 2,
-    y: canvas.height - 30,
-    radius: 20,
-    color: "orange",
-    velocityX: 6,
-    velocityY: 4,
-};
-
-let animationId = null; // To track the animation frame
-
-// Function to draw the ball
-function drawBall() {
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fillStyle = ball.color;
-    ctx.fill();
-    ctx.closePath();
-}
-
-// Function to update ball position
-function updateBallPosition() {
-    // Update ball position based on velocity
-    ball.x += ball.velocityX;
-    ball.y += ball.velocityY;
-
-    // Bounce the ball when it hits the canvas boundaries
-    if (ball.x + ball.velocityX > canvas.width - ball.radius || ball.x + ball.velocityX < ball.radius) {
-        ball.velocityX = -ball.velocityX;
+<head>
+  <meta charset="UTF-8" />
+  <title>Phaser Ball Bounce</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
     }
-    if (ball.y + ball.velocityY > canvas.height - ball.radius || ball.y + ball.velocityY < ball.radius) {
-        ball.velocityY = -ball.velocityY;
+    #startButton, #stopButton {
+      position: absolute;
+      top: 10px;
+      z-index: 10;
+      padding: 8px 12px;
+      background-color: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
     }
-}
+    #startButton { left: 10px; }
+    #stopButton { left: 100px; }
+  </style>
+</head>
+<body>
+  <button id="startButton">Start</button>
+  <button id="stopButton">Stop</button>
 
-// Function to clear the canvas
-function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
+  <script>
+    let game;
+    let ball;
+    let velocityX = 200;
+    let velocityY = 150;
+    let isRunning = false;
 
-// Game loop - Animation
-function animate() {
-    clearCanvas();
-    drawBall();
-    updateBallPosition();
-    animationId = requestAnimationFrame(animate); // Loop the animation and save the return value 
-}
+    const config = {
+      type: Phaser.AUTO,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: "#eeeeee",
+      physics: {
+        default: "arcade",
+        arcade: {
+          gravity: { y: 0 },
+          debug: false
+        }
+      },
+      scene: {
+        preload,
+        create,
+        update
+      }
+    };
 
-// Start Animation button click event
-startButton.addEventListener("click", function() {
-    if (!animationId) {
-        animate();
+    function preload() {
+      this.load.image("ball", "https://raw.githubusercontent.com/photonstorm/phaser3-examples/master/public/assets/sprites/shinyball.png");
     }
-});
 
-// Stop Animation button click event
+    function create() {
+      ball = this.physics.add.image(config.width / 2, config.height / 2, "ball");
+      ball.setCollideWorldBounds(true);
+      ball.setBounce(1);
+      ball.setVisible(false); // hidden until Start
+    }
 
-</script>
+    function update() {
+      if (isRunning && ball) {
+        ball.setVelocity(velocityX, velocityY);
+      } else if (ball) {
+        ball.setVelocity(0, 0);
+      }
+    }
+
+    document.getElementById("startButton").addEventListener("click", () => {
+      if (!game) game = new Phaser.Game(config);
+      isRunning = true;
+      if (ball) ball.setVisible(true);
+    });
+
+    document.getElementById("stopButton").addEventListener("click", () => {
+      isRunning = false;
+    });
+  </script>
+</body>
 </html>
